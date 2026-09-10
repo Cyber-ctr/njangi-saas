@@ -1,0 +1,5 @@
+import { useEffect, useState } from 'react'
+import { api, money } from '../lib/api'
+interface G{id:number;name:string}
+interface C{id:number;member:string;amount:number;method:string;paid_at:string}
+export default function Contributions(){const[g,setG]=useState<G|null>(null);const[c,setC]=useState<C[]>([]);useEffect(()=>{(async()=>{const gs=await api<G[]>('/api/groups');const x=gs[0];if(x){setG(x);setC(await api<C[]>(`/api/contributions?group_id=${x.id}`))}})()},[]);return <><div className="page-header"><div><h1>Savings & contributions</h1><p className="muted">Track inflows, collection methods and member history.</p></div><button className="primary-button">+ Record payment</button></div><section className="panel"><div className="table-wrap"><table><thead><tr><th>Member</th><th>Amount</th><th>Method</th><th>Paid at</th></tr></thead><tbody>{c.map(x=><tr key={x.id}><td>{x.member}</td><td><strong>{money(x.amount)}</strong></td><td><span className="pill green">{x.method}</span></td><td>{new Date(x.paid_at).toLocaleString()}</td></tr>)}</tbody></table></div>{!c.length&&<div className="empty">No contribution records in {g?.name||'this group'}.</div>}</section></>}

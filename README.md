@@ -1,16 +1,97 @@
-# React + Vite
+# NjangiFlow AI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A production-oriented, multi-tenant SaaS Progressive Web App for njangi/tontine and community-finance management, with an explainable machine-learning risk layer.
 
-Currently, two official plugins are available:
+> Brand: **Njangi** · Tagline: **Manage. Grow. Prosper.**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What is included
 
-## React Compiler
+- Installable PWA frontend (React + TypeScript + Vite)
+- Responsive member/admin dashboard
+- Multi-tenant organizations and njangi groups
+- Role-based access control
+- Contribution and payout workflows
+- Double-entry financial ledger foundation
+- Loan origination and repayments
+- Mobile-money-ready payment intent abstraction and webhook endpoint
+- AI/ML member risk scoring with explainable factors
+- Reports, audit logs, notifications
+- PostgreSQL + Redis via Docker Compose
+- FastAPI backend with JWT auth, CORS, rate limiting, security headers
+- Local development seed command
+- API documentation via FastAPI `/docs`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Important production note
 
-## Expanding the ESLint configuration
+This repository is a serious product foundation, but a regulated financial product still needs jurisdiction-specific legal/compliance review, KYC/AML controls where applicable, payment-provider certification, data-protection review, penetration testing, secrets management and independent financial reconciliation before processing real customer funds.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Run locally
+
+### Prerequisites
+
+- Docker + Docker Compose
+- Node.js 20+
+- Python 3.11+
+
+### Backend
+
+```bash
+cd backend
+python -m venv .venv
+# Windows: .venv\\Scripts\\activate
+# Linux/macOS: source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python scripts/seed.py
+uvicorn app.main:app --reload --port 8000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+### Docker
+
+From the repository root:
+
+```bash
+docker compose -f infra/docker-compose.yml up --build
+```
+
+Frontend: `http://localhost:4173`
+Backend: `http://localhost:8000/docs`
+
+## Demo credentials after seeding
+
+- Email: `admin@njangi.local`
+- Password: `ChangeMe123!`
+
+Change these immediately in any real deployment.
+
+## Product architecture
+
+```text
+React + Vite PWA
+        |
+        v
+    FastAPI API
+        |
+   +----+------------------+
+   |                       |
+PostgreSQL              Redis
+   |
+Financial ledger + domain data
+   |
+   v
+ML scoring service layer (scikit-learn)
+   |
+   +--> risk insights
+   +--> contribution behavior
+   +--> portfolio indicators
+```
