@@ -1,13 +1,12 @@
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package.json package-lock.json* ./
-RUN npm install
-COPY . .
-RUN npm run build
+FROM node:22-alpine AS build
+WORKDIR /workspace
+COPY package.json package-lock.json ./
+COPY frontend/package.json ./frontend/package.json
+RUN npm ci --workspace frontend
+COPY frontend ./frontend
+RUN npm run build --workspace frontend
 
-FROM node:20-alpine
-WORKDIR /app
-RUN npm i -g vite
-COPY --from=build /app/dist ./dist
-EXPOSE 4173
-CMD ["vite", "preview", "--host", "0.0.0.0", "--port", "4173"]
+FROM nginxinc/nginx-unprivileged:1.28-alpine
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /workspace/frontend/dist /usr/share/nginx/html
+EXPOSE 8080

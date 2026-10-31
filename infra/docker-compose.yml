@@ -5,8 +5,6 @@ services:
       POSTGRES_DB: njangi
       POSTGRES_USER: njangi
       POSTGRES_PASSWORD: njangi
-    ports:
-      - "5432:5432"
     volumes:
       - njangi_pg:/var/lib/postgresql/data
     healthcheck:
@@ -17,8 +15,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     volumes:
       - njangi_redis:/data
 
@@ -27,28 +23,28 @@ services:
       context: ../backend
       dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql+psycopg://njangi:njangi@db:5432/njangi
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+psycopg2://njangi:njangi@db:5432/njangi
       REDIS_URL: redis://redis:6379/0
-      SECRET_KEY: replace-this-in-production
+      SECRET_KEY: development-only-compose-secret-do-not-use-in-production
       CORS_ORIGINS: http://localhost:4173
+      ALLOWED_HOSTS: localhost,127.0.0.1,testserver,backend
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_started
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
 
   frontend:
     build:
-      context: ../frontend
-      dockerfile: Dockerfile
-    environment:
-      VITE_API_URL: http://localhost:8000
+      context: ..
+      dockerfile: frontend/Dockerfile
     depends_on:
       - backend
     ports:
-      - "4173:4173"
+      - "127.0.0.1:4173:8080"
 
 volumes:
   njangi_pg:

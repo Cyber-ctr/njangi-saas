@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_URL = import.meta.env.VITE_API_URL || ''
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('njangi_token')
@@ -7,7 +7,14 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   if (token) headers.set('Authorization', `Bearer ${token}`)
   const response = await fetch(`${API_URL}${path}`, { ...options, headers })
   const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.detail || 'Request failed')
+  if (!response.ok) {
+    const detail = data.detail
+    const message = Array.isArray(detail)
+      ? detail.map((item: { msg?: string; loc?: (string | number)[] }) =>
+        `${item.loc?.slice(1).join('.') || 'Request'}: ${item.msg || 'Invalid value'}`).join('; ')
+      : typeof detail === 'string' ? detail : 'Request failed'
+    throw new Error(message)
+  }
   return data as T
 }
 

@@ -2,6 +2,8 @@
 
 A production-oriented, multi-tenant SaaS Progressive Web App for njangi/tontine and community-finance management, with an explainable machine-learning risk layer.
 
+This repository is a deployable product foundation, **not yet a finished or approved production financial service**. Subscription billing, email verification/password recovery, jurisdiction-specific compliance, certified payment processing, and production operations still require implementation and external approvals. Online payment intent/webhook endpoints intentionally return `503` until verified provider integrations exist.
+
 > Brand: **Njangi** · Tagline: **Manage. Grow. Prosper.**
 
 ## What is included
@@ -30,7 +32,7 @@ This repository is a serious product foundation, but a regulated financial produ
 ### Prerequisites
 
 - Docker + Docker Compose
-- Node.js 20+
+- Node.js 22+
 - Python 3.11+
 
 ### Backend
@@ -40,11 +42,13 @@ cd backend
 python -m venv .venv
 # Windows: .venv\\Scripts\\activate
 # Linux/macOS: source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 cp .env.example .env
-python scripts/seed.py
-uvicorn app.main:app --reload --port 8000
+python -m scripts.seed
+python -m uvicorn app.main:app --reload --port 8000
 ```
+
+The demo seed is development-only. It preserves existing data and creates the documented demo login. Do not run it in a deployed environment.
 
 ### Frontend
 
@@ -54,7 +58,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`.
+Open `http://localhost:5173`. Vite proxies `/api` requests to the local backend, including when you access the development frontend over your LAN.
 
 ### Docker
 
@@ -64,15 +68,24 @@ From the repository root:
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-Frontend: `http://localhost:4173`
-Backend: `http://localhost:8000/docs`
+The development frontend is served by an unprivileged Nginx container at `http://localhost:4173` and proxies API requests to the backend. The backend docs are available at `http://localhost:8000/docs`. Database and Redis ports are internal to the Compose network.
+
+### Database migrations
+
+The development server creates missing tables for local convenience. Production containers do not mutate the schema on application startup: they run `alembic upgrade head` before starting the API. Back up existing databases before adopting migrations. Do not stamp an existing database as migrated until its schema has been reviewed against the migration.
+
+### Production configuration
+
+The backend image defaults to `ENVIRONMENT=production` and fails closed unless it receives an explicit PostgreSQL URL, Redis URL, a unique secret of at least 32 characters, an HTTPS frontend CORS origin, an allowed-host list, and trusted proxy IPs. Generate a secret with `python -c "import secrets; print(secrets.token_urlsafe(48))"` and provide all settings through your deployment platform's secret manager. Never reuse the development values in `.env.example` or Compose.
+
+Production deployment still requires selecting a hosting provider/region, setting up HTTPS and trusted proxy ranges, database backups/recovery, monitoring/alerts, email delivery, billing, privacy/compliance review, and a certified payment integration. See [the production checklist](./docs/PRODUCTION_CHECKLIST.md).
 
 ## Demo credentials after seeding
 
 - Email: `admin@njangi.local`
 - Password: `ChangeMe123!`
 
-Change these immediately in any real deployment.
+These are local demo credentials only. The seed command is disabled outside development.
 
 ## Product architecture
 

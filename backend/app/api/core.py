@@ -9,11 +9,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import (
     AuditLog, Contribution, Expense, Group, GroupMember, Loan, LoanRepayment,
-    Organization, OrganizationMember, PaymentIntent, User, UserRole,
+    Organization, OrganizationMember, User, UserRole,
 )
 from app.schemas import (
-    ContributionCreate, ExpenseCreate, GroupCreate, LoanCreate, MemberAdd, PaymentIntentCreate,
-    RepaymentCreate, WebhookPayload,
+    ContributionCreate, ExpenseCreate, GroupCreate, LoanCreate, MemberAdd, RepaymentCreate,
 )
 from app.security import current_user
 from app.services.ledger import post_entry, seed_chart
@@ -256,30 +255,10 @@ def ai_risk(group_id: int, user: User = Depends(current_user), db: Session = Dep
 
 
 @router.post("/payments/intents")
-def payment_intent(payload: PaymentIntentCreate, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    if not membership(db, payload.group_id, user.id):
-        raise HTTPException(403, "Not a group member")
-    group = db.get(Group, payload.group_id)
-    ref = f"PAY-{uuid.uuid4().hex.upper()}"
-    intent = PaymentIntent(
-        organization_id=group.organization_id,
-        group_id=payload.group_id,
-        member_id=payload.member_id,
-        amount=payload.amount,
-        provider=payload.provider,
-        reference=ref,
-    )
-    db.add(intent)
-    db.commit()
-    # Real providers should return a provider-hosted checkout / collection prompt.
-    return {"reference": ref, "provider": payload.provider, "status": "pending", "message": "Provider adapter placeholder created"}
+def payment_intent():
+    raise HTTPException(503, "Online payments are disabled until a certified provider is configured")
 
 
 @router.post("/payments/webhook")
-def payment_webhook(payload: WebhookPayload, db: Session = Depends(get_db)):
-    intent = db.query(PaymentIntent).filter_by(reference=payload.reference).first()
-    if not intent:
-        raise HTTPException(404, "Unknown payment reference")
-    intent.status = payload.status
-    db.commit()
-    return {"ok": True}
+def payment_webhook():
+    raise HTTPException(503, "Payment webhooks are disabled until provider signature verification is configured")

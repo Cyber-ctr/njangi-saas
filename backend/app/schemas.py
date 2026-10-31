@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
@@ -10,8 +11,8 @@ class UserCreate(BaseModel):
 
 
 class Login(BaseModel):
-    email: EmailStr
-    password: str
+    email: str = Field(min_length=3, max_length=255)
+    password: str = Field(min_length=8, max_length=72)
 
 
 class TokenOut(BaseModel):
@@ -29,7 +30,7 @@ class GroupCreate(BaseModel):
 
 class MemberAdd(BaseModel):
     email: EmailStr
-    role: str = "member"
+    role: Literal["member"] = "member"
 
 
 class ContributionCreate(BaseModel):

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from app.database import get_db
+from app.limiter import limiter
 from app.models import User
 from app.schemas import Login, TokenOut, UserCreate
 from app.security import create_access_token, current_user, hash_password, verify_password
@@ -11,7 +12,8 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=TokenOut)
-def register(payload: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(request: Request, payload: UserCreate, db: Session = Depends(get_db)):
     user = User(
         full_name=payload.full_name,
         email=payload.email.lower(),
@@ -28,7 +30,8 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenOut)
-def login(payload: Login, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, payload: Login, db: Session = Depends(get_db)):
     user = db.query(User).filter_by(email=payload.email.lower()).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(401, "Invalid email or password")
